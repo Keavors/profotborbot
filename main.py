@@ -456,25 +456,34 @@ def get_message():
 # Его нужно вызвать ОДИН РАЗ после деплоя бота на хостинг
 @app.route('/setwebhook')
 def set_webhook_route():
-    # Получаем базовый URL текущего приложения Flask
-    # (например, https://profotborbot.onrender.com/).
-    # rstrip('/') убирает лишний слэш в конце, если он есть.
-    base_url = request.url_root.rstrip('/')
-    
-    # Теперь webhook_url будет выглядеть как https://profotborbot.onrender.com/8041179077:AAGyyuhNxftV7uX8WLnjmXO7IQmSBALqFX4
-    webhook_url = f"{base_url}/{TOKEN}"
-    
+    # Render предоставляет внешний хост через переменную окружения RENDER_EXTERNAL_HOSTNAME.
+    # Это самый надежный способ получить HTTPS URL.
+    render_external_hostname = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+
+    if render_external_hostname:
+        # Если переменная найдена, формируем HTTPS URL
+        webhook_url = f"https://{render_external_hostname}/{TOKEN}"
+    else:
+        # Если переменной нет (что маловероятно на Render, но возможно при локальном тесте),
+        # используем request.url_root и принудительно меняем http на https
+        base_url = request.url_root.rstrip('/')
+        if base_url.startswith("http://"):
+            base_url = base_url.replace("http://", "https://", 1) # Заменяем только первое вхождение
+        webhook_url = f"{base_url}/{TOKEN}"
+
     try:
+        # Для отладки в логах Render:
+        print(f"Attempting to set webhook to: {webhook_url}")
         bot.set_webhook(url=webhook_url)
         return f"Webhook successfully set to {webhook_url}", 200
     except Exception as e:
+        # Для отладки в логах Render:
+        print(f"Failed to set webhook: {e}")
         return f"Failed to set webhook: {e}", 500
 
 # Запуск Flask приложения
 if __name__ == '__main__':
     # При деплое на Render, Render сам запускает приложение
     # и использует порт, который задан в переменной окружения PORT.
-    # Поэтому мы используем os.environ.get("PORT", 5000), чтобы быть гибкими.
-    # Это важно!
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
