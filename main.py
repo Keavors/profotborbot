@@ -456,9 +456,14 @@ def get_message():
 # Его нужно вызвать ОДИН РАЗ после деплоя бота на хостинг
 @app.route('/setwebhook')
 def set_webhook_route():
-    # Замени "YOUR_RENDER_APP_URL_HERE" на реальный URL, который даст Render
-    # Например: https://my-awesome-bot.onrender.com
-    webhook_url = f"YOUR_RENDER_APP_URL_HERE/{TOKEN}"
+    # Получаем базовый URL текущего приложения Flask
+    # (например, https://profotborbot.onrender.com/).
+    # rstrip('/') убирает лишний слэш в конце, если он есть.
+    base_url = request.url_root.rstrip('/')
+    
+    # Теперь webhook_url будет выглядеть как https://profotborbot.onrender.com/8041179077:AAGyyuhNxftV7uX8WLnjmXO7IQmSBALqFX4
+    webhook_url = f"{base_url}/{TOKEN}"
+    
     try:
         bot.set_webhook(url=webhook_url)
         return f"Webhook successfully set to {webhook_url}", 200
