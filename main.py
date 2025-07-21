@@ -7,8 +7,6 @@ Original file is located at
     https://colab.research.google.com/drive/1A0JEj7rEdlsj7xmxhsgFTPGed8-X0dkO
 """
 
-!pip install pyTelegramBotAPI
-
 import telebot
 from telebot import types
 import random
